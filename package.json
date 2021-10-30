@@ -1,7 +1,7 @@
 {
   "name": "@reneos/auth",
   "version": "0.0.1",
-  "description": "Register and auth service",
+  "description": "Register and auth microservice ",
   "main": "app.js",
   "type": "module",
   "scripts": {
