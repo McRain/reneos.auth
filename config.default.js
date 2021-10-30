@@ -1,6 +1,7 @@
 const jwt_secret = "EZ2SHOviGLTOIXaK"
 
 const routes = [
+	//
 	{
 		path:"/auth/login",
 		workers:[
@@ -125,6 +126,7 @@ const routes = [
 			}
 		]
 	}
+	//
 ]
 
 const web = {
