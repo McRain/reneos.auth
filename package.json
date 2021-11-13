@@ -1,6 +1,6 @@
 {
   "name": "@reneos/auth",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Register and auth microservice ",
   "main": "app.js",
   "type": "module",
@@ -17,6 +17,6 @@
     "url": "https://github.com/McRain/reneos.auth.git"
 	},
   "dependencies": {
-    "@reneos/server": "^0.0.24"
+    "@reneos/server": "0.1.0"
   }
 }

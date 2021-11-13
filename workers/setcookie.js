@@ -1,4 +1,4 @@
-export default (options,data,res)=>{
+export default (options,data,req,res)=>{
 	res.cookie[options.name] = {
 		value: data,
 		httpOnly: true,

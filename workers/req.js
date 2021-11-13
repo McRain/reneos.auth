@@ -1,6 +1,6 @@
 import request from "../request.js"
 
-export default async (options, data) => {
+export default async (options,data,req,res) => {
 	let values = {
 		...options.data
 	}

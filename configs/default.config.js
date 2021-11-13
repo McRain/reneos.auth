@@ -1,4 +1,7 @@
 const jwt_secret = "EZ2SHOviGLTOIXaK"
+const jwt_port = 22001
+
+const _extauthport = 20110
 
 const routes = [
 	//
@@ -12,14 +15,17 @@ const routes = [
 			{
 				name:"req",
 				options:{
-					port:20110,
+					port:_extauthport,
 					path:"/auth/login",
 					url:"localhost"
 				}
 			},
 			{
-				name:"checkfield",
-				options:{field:"id"}
+				name:"fieldsexists",
+				options:{
+					fields:["id"],
+					returnresult:true
+				}
 			},
 			{
 				name:"setdata",
@@ -30,7 +36,7 @@ const routes = [
 			{
 				name:"req",
 				options:{
-					port:22001,
+					port:jwt_port,
 					path:"/api/encode",
 					data:{
 						secret: jwt_secret,
@@ -58,7 +64,7 @@ const routes = [
 			{
 				name:"req",
 				options:{
-					port:22001,
+					port:jwt_port,
 					path:"/api/decode",
 					data:{
 						secret: jwt_secret
@@ -74,14 +80,16 @@ const routes = [
 			{
 				name:"extget",
 				options:{
-					port:20110,
+					port:_extauthport,
 					path:"/auth",
 					url:"localhost"
 				}
 			},
 			{
-				name:"checkfield",
-				options:{field:"id"}
+				name:"fieldsexists",
+				options:{
+					fields:["id"]
+				}
 			},
 			{
 				name:"sethead",
@@ -103,7 +111,7 @@ const routes = [
 			{
 				name:"req",
 				options:{
-					port:22001,
+					port:jwt_port,
 					path:"/api/decode",
 					data:{
 						secret: jwt_secret
@@ -113,7 +121,7 @@ const routes = [
 			{
 				name:"req",
 				options:{
-					port:20110,
+					port:_extauthport,
 					path:"/auth/logout",
 					url:"localhost"
 				}
@@ -129,12 +137,6 @@ const routes = [
 	//
 ]
 
-const web = {
-	port: 20000,
-	root: "auth"
-}
-
 export {
-	web,
 	routes
 }

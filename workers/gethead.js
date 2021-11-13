@@ -1,3 +1,3 @@
 export default (options,data,req,res)=>{
-	return req.cookie[options.name]
+	return req.headers[options.header]
 }

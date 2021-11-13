@@ -104,3 +104,4 @@ dist
 .tern-port
 package-lock.json
 .vscode/launch.json
+_delete.js
