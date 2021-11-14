@@ -24,22 +24,35 @@ class App {
 		console.log(`${App.Now} Start web on port ${web.port}`)
 	}
 
+	/**
+	 * 
+	 * @param {*} name 
+	 */
 	static async BuildWorkers(name) {
 		console.log(`${App.Now} Load '${name}' configuration `)
 		const conf = await import(`${dirname(import.meta.url)}/configs/${name}.js`)
 		for (let i = 0; i < conf.routes.length; i++) {
 			const { path, workers } = conf.routes[i]
+			const names = []
 			const handlers = []
 			for (let i = 0; i < workers.length; i++) {
 				const { name, options } = workers[i]
 				const module = await import(`${dirname(import.meta.url)}/workers/${name}.js`)
 				handlers.push(module.default.bind(null, options))
+				names.push(name)
 			}
 			const func = async (req, res) => {
 				let value = req
 				for (let i = 0; i < handlers.length; i++) {
-					value = await handlers[i](value, req, res)
+					try {
+						value = await handlers[i](value, req, res)
+					} catch (error) {	
+						console.warn(error)
+						return
+					}
 					if (!value) {
+						if(i<handlers.length-1)
+							console.log(`${App.Now} Step ${i} (${names[i]}) for ${req.url} return no value`)
 						return
 					}
 				}

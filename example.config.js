@@ -3,6 +3,7 @@ const web = {
 }
 
 const app={
+	//Load from ./configs/
 	configs:[
 		"default.config"
 	]
