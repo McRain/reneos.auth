@@ -23,17 +23,13 @@ export default ({ url, path = '/',method='POST',port = 20121, credentials, heade
 				try {
 					rs = JSON.parse(result)
 				} catch (error) {
-					return reject(error)
+					rs = result
 				}
 				resolve(rs)
 			});
-			res.on("error", (e) => {
-				console.warn(r.message)
-			})
+			res.on("error", e =>console.warn(r.message))
 		});
-		req.on('error', (e) => {
-			reject(e)
-		});
+		req.on('error', e => reject(e));
 		req.write(data);
 		req.end();
 	})
