@@ -7,11 +7,7 @@ export default {
 	"/data/write": async (req, res) => {
 		const { id, ...values } = req.body
 		if (!id)
-			return {
-				data: null
-			}
-		return {
-			data: await Data.SetData(id, values)
-		}
+			return {}
+		return await Data.SetData(id, values)
 	}
 }

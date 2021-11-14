@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-		name:"auth_app",
+		name:"reneos_auth",
     script: "app.js",
     watch: ["*.js","*.json"],
     watch_delay: 3000,

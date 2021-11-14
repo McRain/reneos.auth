@@ -1,6 +1,12 @@
 const _data = new Map()
 
 class Data{
+	/**
+	 * Set data by key
+	 * @param {*} key 
+	 * @param {*} values 
+	 * @returns 
+	 */
 	static SetData(key,values){
 		const v = _data.has(key)?_data.get(key):{  }
 		const data = {
