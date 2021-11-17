@@ -5,6 +5,6 @@ How to use:
 - install node.js
 - clone repo
 - use "npm i"
-- edit /config.js
+- edit /example.config.js
 - edit /configs/default.config.js
 - run "node."
