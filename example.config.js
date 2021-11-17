@@ -5,7 +5,8 @@ const web = {
 const app={
 	//Load from ./configs/
 	configs:[
-		"default.config"
+		"default.config",
+		"api.config"
 	]
 }
 

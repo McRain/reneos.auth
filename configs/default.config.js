@@ -10,13 +10,17 @@ const _ext_auth = '/auth'
 const _ext_logout = '/auth/logout'
 const _ext_host = 'localhost'
 
+const _tokencookie = 'auth'
+
 const routes = [
 	{
 		path: "/auth/login",
 		workers: [
 			{
-				name: "body",
-				options: {}
+				name: "reqprops",
+				options: {
+					properties: ['body']
+				}
 			},
 			{
 				name: "req",
@@ -53,7 +57,11 @@ const routes = [
 			{
 				name: "setcookie",
 				options: {
-					name: "auth"
+					name:_tokencookie,
+					mix: {
+						httpOnly: true,
+						duration: 864000000
+					}
 				}
 			}
 		]
@@ -62,9 +70,9 @@ const routes = [
 		path: "/auth",
 		workers: [
 			{
-				name: "getcookie",
+				name: "reqprops",
 				options: {
-					name: "auth"
+					properties: ['cookie', _tokencookie]
 				}
 			},
 			{
@@ -109,9 +117,9 @@ const routes = [
 		path: "/auth/logout",
 		workers: [
 			{
-				name: "getcookie",
+				name: "reqprops",
 				options: {
-					name: "auth"
+					properties: ['cookie', _tokencookie]
 				}
 			},
 			{

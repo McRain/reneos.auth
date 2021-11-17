@@ -1,29 +1,28 @@
-const _data = new Map()
+const _data = {}
 
 class Data{
-	/**
-	 * Set data by key
-	 * @param {*} key 
-	 * @param {*} values 
-	 * @returns 
-	 */
 	static SetData(key,values){
-		const v = _data.has(key)?_data.get(key):{  }
-		const data = {
-			...v,
-			...values
+		const dn = Date.now()
+		if(!_data[key])
+		{
+			_data[key] = {
+				data:{},
+				update:dn
+			}
 		}
-		_data.set(key,data)
-		return data
+		const v  = _data[key]
+		v.data = {...v.data,...values}
+		v.update = dn
+		return values
 	}
 
 	/**
-	 * Return data by KEY or KEY
+	 * Return data by KEY or empty 
 	 * @param {*} key 
 	 * @returns 
 	 */
 	static GetData(key){
-		return _data.has(key)?_data.get(key):key
+		return _data[key] || {}
 	}
 }
 
