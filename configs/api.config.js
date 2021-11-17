@@ -1,15 +1,20 @@
-import {jwt} from '../example.config.js'
-
 const jwt_secret = "XlSklNDEtGXHpbkkX6ri7Fqj"
+
+const jwt={
+	port:22001,
+	encode_path:"/encode",
+	decode_path:"/decode",
+	expire:'240h'
+}
 
 const routes = [
 	{
-		path:"/api/*",
+		path: "/api/*",
 		workers:[
 			{	
-				name:"gethead",
+				name:"reqprops",
 				options:{
-					header:"apikey"
+					properties:['headers','apikey']
 				}
 			},
 			{
@@ -27,13 +32,15 @@ const routes = [
 				options:{
 					field:"id",
 					list:[
-						"apis"
+						"apidev"
 					]
 				}
 			},
 			{
-				name:"body",
-				options:{}
+				name:"reqprops",
+				options:{
+					properties:['body']
+				}
 			}
 		]
 	}

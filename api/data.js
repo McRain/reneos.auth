@@ -1,13 +1,11 @@
 import Data from '../data.js'
 
 export default {
-	"/api/read": async (req, res,data) => {
-		return await Data.GetData(data.id)
-	},
-	"/api/write": async (req, res) => {
+	"/api/read": (req, res,data) => Data.GetData(data.id),
+	"/api/write": (req, res) => {
 		const { id, ...values } = req.body
 		if (!id)
 			return {}
-		return await Data.SetData(id, values)
+		return Data.SetData(id, values)
 	}
 }

@@ -42,23 +42,20 @@ class App {
 				names.push(name)
 			}
 			const func = async (req, res) => {
-
 				let value = req
-
 				for (let i = 0; i < handlers.length; i++) {
 					try {
 						value = await handlers[i](value, req, res)
 					} catch (error) {	
 						console.warn(error)
-						return {}//for default responce
+						return
 					}
 					if (!value) {
 						if(i<handlers.length-1)
-							console.log(`${App.Now} Step ${i} (${names[i]}) for ${req.url} return unexpected value`)
-						return {}
+							console.log(`${App.Now} Step ${i} (${names[i]}) for ${req.url} return no value`)
+						return
 					}
 				}
-
 				return value
 			}
 			console.log(`${App.Now} Add route ${path}`)
