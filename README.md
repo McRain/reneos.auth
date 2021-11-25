@@ -8,3 +8,6 @@ How to use:
 - edit /example.config.js
 - edit /configs/default.config.js
 - run "node."
+
+On russian 
+https://habr.com/ru/post/591319/
