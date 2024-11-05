@@ -4,6 +4,7 @@ Applications for authorization and user authentication, optimized for microservi
 How to use:
 
 npm i @reneos/auth
+
 see ./examples/
 
 On russian https://habr.com/ru/post/591319/
