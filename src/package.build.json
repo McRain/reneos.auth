@@ -2,10 +2,9 @@
   "name": "@reneos/auth",
   "version": "0.0.11",
   "description": "An intermediate microservice for applications that implements authentication and authorization in your services",
-  "main": "src/app.js",
+  "main": "main.js",
   "type": "module",
   "scripts": {
-    "build": "npx webpack --config webpack.prod.js",
     "start": "node --env-file=dev.env ." 
   },
   "author": {
@@ -19,11 +18,5 @@
 	"repository": {
 		"type": "git",
     "url": "https://github.com/McRain/reneos.auth.git"
-	},
-  "devDependencies": {
-    "webpack": "5.96.1",
-    "webpack-cli": "5.1.4",
-    "webpack-dev-server": "5.1.0",
-    "copy-webpack-plugin": "12.0.2"
-  }
+	}
 }
