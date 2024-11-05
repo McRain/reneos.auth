@@ -1,7 +1,8 @@
-const jwt_secret = "XlSklNDEtGXHpbkkX6ri7Fqj"
+const jwt_secret = process.env.JWT_SECRET_API || "jwt_secret"
+const jwt_port = process.env.JWT_PORT_API || 22001
 
 const jwt={
-	port:22001,
+	port:jwt_port,
 	encode_path:"/encode",
 	decode_path:"/decode",
 	expire:'240h'
