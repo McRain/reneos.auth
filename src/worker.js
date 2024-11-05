@@ -1,8 +1,9 @@
 import { dirname } from 'path'
 
 import { app,tag } from "./config.js"
+import * as Modules from "./workers/index.js"
 
-import * as Api from './api/index.js'
+//import * as Api from './api/index.js'
 import Server from './server.js'
 
 class Worker {
@@ -25,15 +26,14 @@ class Worker {
      */
     static async BuildWorkers(name) {
         console.log(`${Worker.Now} Load '${name}' configuration `)
-        const conf = await import(`${dirname(import.meta.url)}/configs/${name}.js`)
+        const conf = await import(`./configs/${name}.js`)
         for (let i = 0; i < conf.routes.length; i++) {
             const { path, workers } = conf.routes[i]
             const names = []
             const handlers = []
             for (let i = 0; i < workers.length; i++) {
                 const { name, options } = workers[i]
-                const module = await import(`${dirname(import.meta.url)}/workers/${name}.js`)
-                handlers.push(module.default.bind(null, options))
+                handlers.push( Modules[name].bind(null, options))
                 names.push(name)
             }
             const func = async (req, res) => {

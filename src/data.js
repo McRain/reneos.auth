@@ -22,7 +22,7 @@ class Data{
 	 * @returns 
 	 */
 	static GetData(key){
-		return _data[key] || {}
+		return _data[key].data || {}
 	}
 }
 

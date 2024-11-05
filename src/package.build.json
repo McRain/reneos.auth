@@ -1,12 +1,9 @@
 {
   "name": "@reneos/auth",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "An intermediate microservice for applications that implements authentication and authorization in your services",
   "main": "main.js",
-  "type": "module",
-  "scripts": {
-    "start": "node --env-file=dev.env ." 
-  },
+  "type": "commonjs",
   "author": {
 		"name": "Viktor Abdulov",
 		"email": "dev@reneos.com"

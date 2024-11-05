@@ -114,7 +114,9 @@ class Server {
             BodyParse(req)
             CookieParse(req)
             const result = await req.handler(req,res)
-            console.log(result)
+            if(!result){
+                return
+            }
             res.writeHead(200)
             res.end(result)
             return

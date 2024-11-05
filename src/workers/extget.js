@@ -4,7 +4,6 @@ import request from "../request.js"
  * If the data is a string, it requests data from the external service
  */
 export default async (options,data,req,res) => {
-	console.log(`extget`)
 	if (typeof data === "string") {
 		return await request({
 			url: "localhost",
