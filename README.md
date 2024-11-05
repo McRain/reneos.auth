@@ -4,10 +4,9 @@ Applications for authorization and user authentication, optimized for microservi
 How to use:
 - install node.js
 - clone repo
-- use "npm i"
-- edit /config.js
-- edit /configs/default.config.js
-- run "node."
+- edit ./src/configs/default.config.js
+- create ./src/config.js (see example.config.js)
+- see "scripts" in package.json
 
 On russian https://habr.com/ru/post/591319/
 
