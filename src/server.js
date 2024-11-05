@@ -1,9 +1,5 @@
 import http from "http"
 
-import { app as Config, tag } from './config.js'
-
-import Worker from "./worker.js";
-
 function BodyParse(req) {
     try {
         req.body = JSON.parse(typeof req.data === 'string' ? req.data : req.data.toString('utf8'))
@@ -46,7 +42,7 @@ const _routes = {}
 
 class Server {
     static get Port() {
-        return Config.port
+        return _server.port
     }
 
     static get Server() {
@@ -57,11 +53,11 @@ class Server {
 		return new Date().toLocaleString()
 	}
 
-    static Start() {
+    static Start(config={port:4000}) {
         return new Promise((resolve, reject) => {
             try {
-                _server.listen(Config.port, resolve)
-                console.log(`${Server.Now} [${tag}] Start web on port ${Config.port}`)
+                _server.listen(config.port, resolve)
+                console.log(`${Server.Now} Start web on port ${config.port}`)
             } catch (error) {
                 reject(error)
             }
@@ -79,10 +75,9 @@ class Server {
 
     static OnRequest(req, res) {
         try {
-            const parsedUrl = new URL(req.url, `http://${req.headers.host}`)
+            const parsedUrl = new URL(req.url, `${req.protocol || 'http'}://${req.headers.host || 'localhost'}`)
             req.path = parsedUrl.pathname
             if(!_routes[req.path]){
-                console.warn(`No route ${req.path}`)
                 res.writeHead(404).end()
                 req.destroy()
                 return
@@ -90,13 +85,12 @@ class Server {
             req.handler = _routes[req.path]
             req.query = Object.fromEntries(parsedUrl.searchParams.entries());
         } catch (error) {
-            console.warn(`[${tag}] : ${error.message}`)
+            console.warn(error.message)
             req.query = {}
         }
         req.data = ''
         req.on('data', chunk => {
             if (req.data.length > Config.maxdata) {
-                console.warn(`[${tag}] :Request Entity Too Large`)
                 res.writeHead(413, { 'Content-Type': 'text/plain' }).end('Request Entity Too Large')
                 req.destroy()
                 return
@@ -121,7 +115,7 @@ class Server {
             res.end(result)
             return
         } catch (error) {
-            console.warn(`[${tag}] : ${error.message}`)
+            console.warn(error.message)
             res.writeHead(500).end()
             req.destroy()
             return

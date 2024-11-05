@@ -1,16 +1,11 @@
 {
   "name": "@reneos/auth",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "An intermediate microservice for applications that implements authentication and authorization in your services",
-  "main": "./src/app.js",
+  "main": "./src/index.js",
   "type": "module",
   "scripts": {
-    "build": "npx webpack --config webpack.config.js",
-    "docker": "docker build -t reneos_auth .",
-    "docker-build": "docker build -t reneos-auth .",
-    "docker-run": "docker run -p 20000:20000 reneos-auth",
-    "start": "npm run build && npm run docker-build && npm run docker-run",
-    "dev": "node ."
+    "dev": "node ./examples/app.js"
   },
   "author": {
 		"name": "Viktor Abdulov",
@@ -23,15 +18,5 @@
 	"repository": {
 		"type": "git",
     "url": "https://github.com/McRain/reneos.auth.git"
-	},
-  "devDependencies": {
-    "@babel/core": "^7.24.7",
-    "@babel/preset-env": "^7.24.7",
-    "babel-loader": "^9.1.3",
-    "webpack": "^5.92.1",
-    "webpack-cli": "^5.1.4",
-    "webpack-node-externals": "3.0.0",
-    "webpack-obfuscator": "3.5.1",
-    "copy-webpack-plugin": "12.0.2"
-  }
+	}
 }

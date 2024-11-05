@@ -1,34 +1,27 @@
-import { dirname } from 'path'
-
-import { app,tag } from "./config.js"
 import * as Modules from "./workers/index.js"
 
-//import * as Api from './api/index.js'
 import Server from './server.js'
 
 class Worker {
     static get Now(){
 		return new Date().toLocaleString()
 	}
-    static async Start() {
-        for (let i = 0; i < app.configs.length; i++) {
-            await Worker.BuildWorkers(app.configs[i])
+    static async Start(config={
+        configs:[]
+    }) {
+        for (let i = 0; i < config.configs.length; i++) {
+            await Worker.BuildWorkers(config.configs[i])
         }
-        /*Object.keys(Api).forEach(k => {
-            console.log(`${Worker.Now} [${tag}] Add routes ${Object.keys(Api[k]).join(',')}`)
-            WebServer.AddRoutes(Api[k])
-        })*/
     }
 
     /**
      * 
      * @param {*} name 
      */
-    static async BuildWorkers(name) {
-        console.log(`${Worker.Now} Load '${name}' configuration `)
-        const conf = await import(`./configs/${name}.js`)
-        for (let i = 0; i < conf.routes.length; i++) {
-            const { path, workers } = conf.routes[i]
+    static async BuildWorkers(config) {
+        console.log(`${Worker.Now} Build configuration `)
+        for (let i = 0; i < config.routes.length; i++) {
+            const { path, workers } = config.routes[i]
             const names = []
             const handlers = []
             for (let i = 0; i < workers.length; i++) {

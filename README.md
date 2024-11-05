@@ -2,11 +2,9 @@
 Applications for authorization and user authentication, optimized for microservices architecture.
 
 How to use:
-- install node.js
-- clone repo
-- edit ./src/configs/default.config.js
-- create ./src/config.js (see example.config.js)
-- see "scripts" in package.json
+
+npm i @reneos/auth
+see ./examples/
 
 On russian https://habr.com/ru/post/591319/
 

@@ -21,7 +21,7 @@ export default {
     ],
   },
   entry: {
-    main: "./src/app.js"
+    main: "./src/index.js"
   },
   output: {
     path: join(__dirname, 'dist'),
