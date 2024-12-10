@@ -37,7 +37,6 @@ class Worker {
                 for (let i = 0; i < handlers.length; i++) {
                     try {
                         value = await handlers[i](value, req, res)
-                        console.log(value)
                     } catch (error) {                        
                         _emitter.emit('error', error,path,i)
                         return
