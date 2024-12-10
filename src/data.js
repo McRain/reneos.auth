@@ -1,13 +1,23 @@
 const _data = {}
 
 class Data{
-	static SetData(key,values){
+	static RemoveData(key){
+		if(!_data[key])
+		{
+			return
+		}
+		delete _data[key]
+	}
+	static SetData(key,values,expires=86400000){
 		const dn = Date.now()
 		if(!_data[key])
 		{
 			_data[key] = {
 				data:{},
-				update:dn
+				update:dn,
+				timeout:setTimeout(()=>{
+					Data.RemoveData(key)
+				},expires)
 			}
 		}
 		const v  = _data[key]
