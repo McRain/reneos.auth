@@ -1,6 +1,8 @@
 import * as Modules from "./workers/index.js"
-
+import EventEmitter from "events"
 import Server from './server.js'
+
+const _emitter=new EventEmitter()
 
 class Worker {
     static get Now(){
@@ -19,7 +21,6 @@ class Worker {
      * @param {*} name 
      */
     static async BuildWorkers(config) {
-        console.log(`${Worker.Now} Build configuration `)
         for (let i = 0; i < config.routes.length; i++) {
             const { path, workers } = config.routes[i]
             const names = []
@@ -35,24 +36,21 @@ class Worker {
                     try {
                         value = await handlers[i](value, req, res)
                     } catch (error) {
-                        console.warn(error)
+                        _emitter.emit(error)
                         return
                     }
                     if (!value) {
-                        if (i < handlers.length - 1)
-                            console.log(`${Worker.Now} Step ${i} (${names[i]}) for ${req.url} return no value`)
+                        if (i < handlers.length - 1){
+                            _emitter.emit('error',new Error(`${Worker.Now} Step ${i} (${names[i]}) for ${req.url} return no value`))
+                        }
                         return
                     }
                 }
                 return value
             }
-            console.log(`${Worker.Now} Add route ${path}`)
             Server.AddRoute(path, func)
         }
-    }
-
-    static async Run(){
-
+        _emitter.emit('ready')
     }
 }
 

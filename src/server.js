@@ -1,4 +1,7 @@
 import http from "http"
+import EventEmitter from "events"
+
+const _emitter = new EventEmitter()
 
 function BodyParse(req) {
     try {
@@ -40,6 +43,11 @@ function Cors(req, res) {
 
 const _routes = {}
 
+const Config = {
+    port: 5000,
+    maxdata: 1024000
+}
+
 class Server {
     static get Port() {
         return _server.port
@@ -49,15 +57,17 @@ class Server {
         return _server
     }
 
-    static get Now(){
-		return new Date().toLocaleString()
-	}
+    static get Now() {
+        return new Date().toLocaleString()
+    }
 
-    static Start(config={port:4000}) {
+    static Start(config = {}) {
+        Object.keys(config).forEach(k => {
+            Config[k] = config[k]
+        })
         return new Promise((resolve, reject) => {
             try {
-                _server.listen(config.port, resolve)
-                console.log(`${Server.Now} Start web on port ${config.port}`)
+                _server.listen(Config.port, resolve)
             } catch (error) {
                 reject(error)
             }
@@ -65,27 +75,25 @@ class Server {
 
     }
 
-    static AddRoute(path,handler){
-        _routes[path]=handler
+    static AddRoute(path, handler) {
+        _routes[path] = handler
     }
 
-    static RemoveRoute(path){
+    static RemoveRoute(path) {
         delete _routes[path]
     }
 
     static OnRequest(req, res) {
         try {
-            const parsedUrl = new URL(req.url, `${req.protocol || 'http'}://${req.headers.host || 'localhost'}`)
-            req.path = parsedUrl.pathname
-            if(!_routes[req.path]){
+            const parsedUrl = new URL(req.url || '/', `${req.protocol || 'http'}://${req.headers.host || 'localhost'}`)
+            req.path = parsedUrl.pathname || '/'
+            if (!_routes[req.path]) {
                 res.writeHead(404).end()
                 req.destroy()
                 return
             }
-            req.handler = _routes[req.path]
             req.query = Object.fromEntries(parsedUrl.searchParams.entries());
         } catch (error) {
-            console.warn(error.message)
             req.query = {}
         }
         req.data = ''
@@ -93,6 +101,7 @@ class Server {
             if (req.data.length > Config.maxdata) {
                 res.writeHead(413, { 'Content-Type': 'text/plain' }).end('Request Entity Too Large')
                 req.destroy()
+                _emitter.emit('error',new Error('Request Entity Too Large'))
                 return
             }
             req.data += chunk
@@ -107,28 +116,38 @@ class Server {
             }
             BodyParse(req)
             CookieParse(req)
-            const result = await req.handler(req,res)
-            if(!result){
+            const result = await _routes[req.path](req, res)
+            if (!result) {
                 return
             }
-            res.writeHead(200)
-            res.end(result)
-            return
+            const isJson = typeof result === 'object';
+            if (isJson) {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(result));
+            } else  {
+                res.writeHead(200, { 'Content-Type': 'text/plain' });
+                res.end(result);
+            }
+
         } catch (error) {
-            console.warn(error.message)
             res.writeHead(500).end()
             req.destroy()
-            return
+            _emitter.emit('error',error)
         }
     }
     static Destroy() {
         return new Promise((resolve) => {
             _server.close(resolve);
         })
-
     }
 }
 
 const _server = http.createServer(Server.OnRequest)
 
-export default Server
+export default new Proxy(Server, {
+    get(target, prop) {
+        if (prop in target)
+            return target[prop]
+        return _emitter[prop]
+    }
+})
