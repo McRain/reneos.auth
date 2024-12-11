@@ -16,6 +16,12 @@ const routes = [
 	{
 		path: "/auth/login",
 		workers: [
+			{	
+				name:"mymodule",
+				options:{
+					"optionkey":"optionvalue"
+				}
+			},
 			{
 				name: "reqprops",
 				options: {

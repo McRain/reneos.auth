@@ -1,1 +1,2 @@
-Scripts to provide service API endpoints
+Scripts to provide service API endpoints, not public.
+For example you can update user data from server side

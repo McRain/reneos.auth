@@ -38,12 +38,12 @@ class Worker {
                     try {
                         value = await handlers[i](value, req, res)
                     } catch (error) {                        
-                        _emitter.emit('error', error,path,i)
+                        _emitter.emit('errorchain', error.message,path,i)
                         return
                     }
                     if (!value) {
                         if (i < handlers.length - 1) {
-                            _emitter.emit('error', new Error(`${Worker.Now} Step ${i} (${names[i]}) for ${req.url} return no value`))
+                            _emitter.emit('endchain', `${Worker.Now} Step ${i} (${names[i]}) for ${req.url} return no value`)
                         }
                         return
                     }

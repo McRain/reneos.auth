@@ -13,6 +13,12 @@ const routes = [
 		path: "/api/*",
 		workers:[
 			{	
+				name:"mymodule",
+				options:{
+					"optionkey":"optionvalue"
+				}
+			},
+			{	
 				name:"reqprops",
 				options:{
 					properties:['headers','apikey']
