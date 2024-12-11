@@ -1,6 +1,6 @@
 {
   "name": "@reneos/auth",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "An intermediate microservice for applications that implements authentication and authorization in your services",
   "main": "./src/index.js",
   "type": "module",

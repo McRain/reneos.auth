@@ -8,9 +8,9 @@ class Worker {
     static get Now() {
         return new Date().toLocaleString()
     }
-    static async Start(config = {configs: []},mods) {
+    static async Start(config = { configs: [] }, mods) {
         for (let i = 0; i < config.configs.length; i++) {
-            await Worker.BuildWorkers(config.configs[i],mods)
+            await Worker.BuildWorkers(config.configs[i], mods)
         }
     }
 
@@ -32,25 +32,25 @@ class Worker {
                     _emitter.emit('error', error)
                 }
             }
-            const func = async (req, res) => {
+            Server.AddRoute(path, async (req, res) => {
                 let value = {}
                 for (let i = 0; i < handlers.length; i++) {
                     try {
                         value = await handlers[i](value, req, res)
-                    } catch (error) {                        
-                        _emitter.emit('errorchain', error.message,path,i)
+                    } catch (error) {
+                        _emitter.emit('errorchain', error.message, path, i)
                         return
                     }
                     if (!value) {
                         if (i < handlers.length - 1) {
                             _emitter.emit('endchain', `${Worker.Now} Step ${i} (${names[i]}) for ${req.url} return no value`)
                         }
+                        res.end()
                         return
                     }
                 }
                 return value
-            }
-            Server.AddRoute(path, func)
+            })
         }
         _emitter.emit('ready')
     }

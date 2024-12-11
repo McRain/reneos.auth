@@ -96,17 +96,26 @@ class Server {
         } catch (error) {
             req.query = {}
         }
-        req.data = ''
+        const chunks = []
+        let dataLength = 0
         req.on('data', chunk => {
-            if (req.data.length > Config.maxdata) {
+            dataLength += chunk.length;
+            if (dataLength > Config.maxdata) {
                 res.writeHead(413, { 'Content-Type': 'text/plain' }).end('Request Entity Too Large')
                 req.destroy()
-                _emitter.emit('error',new Error('Request Entity Too Large'))
                 return
             }
-            req.data += chunk
+            chunks.push(chunk);
         })
-        req.on('end', Server.OnRequestReady.bind(null, req, res))
+        req.on('end', () => {
+            try {
+                req.data = Buffer.concat(chunks).toString();
+                Server.OnRequestReady(req, res);
+            } catch (error) {
+                res.writeHead(400, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: 'Invalid data' }));
+            }
+        })
+            
     }
 
     static async OnRequestReady(req, res) {
@@ -124,7 +133,7 @@ class Server {
             if (isJson) {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify(result));
-            } else  {
+            } else {
                 res.writeHead(200, { 'Content-Type': 'text/plain' });
                 res.end(result);
             }
@@ -132,7 +141,7 @@ class Server {
         } catch (error) {
             res.writeHead(500).end()
             req.destroy()
-            _emitter.emit('error',error)
+            _emitter.emit('error', error)
         }
     }
     static Destroy() {
