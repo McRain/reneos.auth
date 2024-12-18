@@ -13,7 +13,7 @@ Request processing queue configurations define the stages of request processing.
 You can make "module" in any order in a "chain". If you have not found the required processing option - write your "module".
 
 
-
+![Schema](docs/schema.jpg)
 
 # Worker Module Guidelines
 
