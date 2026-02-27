@@ -1,113 +1,345 @@
-# reneos.auth
-Applications for authorization and user authentication, optimized for microservices architecture.
+# @reneos/auth
 
-How to use:
+An intermediate microservice for authentication and authorization, optimized for microservices architecture. Implements a **declarative pipeline** model — each HTTP route is a chain of small worker modules executed in sequence.
 
+Works without any external dependencies — uses only the built-in Node.js `http` module.
+
+> Article in Russian: https://habr.com/ru/post/591319/
+
+---
+
+## Requirements
+
+- Node.js >= 20.18.0
+
+---
+
+## Installation
+
+```bash
 npm i @reneos/auth
+```
 
-see ./examples/
+---
 
-On russian https://habr.com/ru/post/591319/
+## Quick Start
 
-Request processing queue configurations define the stages of request processing. In the "workers" folder, each script is a link in the processing chain. The result returned from each "module" is passed to the next "module". If the "module" did not return a result (or returned null), processing ends.
-You can make "module" in any order in a "chain". If you have not found the required processing option - write your "module".
+```javascript
+import { App } from "@reneos/auth"
+import Config from "./config.js"
 
+App.Start(Config)
+```
+
+See `./examples/` for a full working setup.
+
+---
+
+## How It Works
+
+Each route is defined as an **ordered list of workers**. When a request comes in, the workers execute one by one. The output of each worker becomes the input (`data`) of the next. If any worker returns `null` or `undefined`, the chain stops and the response is finalized immediately.
+
+```
+Request → [worker1] → [worker2] → ... → [workerN] → Response
+```
 
 ![Schema](docs/schema.jpg)
 
-# Worker Module Guidelines
-
-This document provides instructions for creating modules to be used within the worker pipeline system. Follow these guidelines to ensure compatibility and functionality.
-
 ---
 
-## Module Requirements
+## Configuration Structure
 
-### Exported Function
-
-Each module must export a default function that serves as a handler in the processing chain. The function should have the following structure:
+The configuration passed to `App.Start` has two sections:
 
 ```javascript
-export default async function (options, input, req, res) {
-    console.log(options, input, req)
-    const output = {}
-    return output; // Return the processed result
+{
+  web: {
+    port: 5000,       // HTTP port (default: 5000)
+    maxdata: 1024000  // Max request body size in bytes (default: 1 MB)
+  },
+  app: {
+    configs: [
+      {
+        routes: [
+          {
+            path: "/some/path",
+            workers: [
+              { name: "workerName", options: { /* worker-specific options */ } }
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 
-### Function Arguments
-
-The exported function must handle the following arguments:
-
-1. **`options`**: An object of settings defined in the configuration.
-2. **`input`**: The result from the previous handler in the chain (or an empty object for the first handler).
-3. **`req`**: The HTTP request object.
-4. **`res`**: The HTTP response object.
-
-### Function Output
-
-The function must return a processed result, either synchronously or asynchronously. Returning `undefined` or `null` will terminate the chain with an error.
-
-### Error Handling
-
-Errors occurring within the module should be thrown using `throw`. These will be captured and emitted through `_emitter.emit('errorchain')`.
-
-## Module Integration
-
-### Module Naming
-
-The name specified in the configuration must match the name of the exported module.
-
-### Module Files
-
-Modules must be passed through the `mods` object when calling `Worker.Start`.
+Multiple config objects can be merged in `configs` — useful for splitting auth routes and API routes into separate files.
 
 ---
 
-## Configuration Example
+## Built-in Workers
 
-```json
+All built-in workers are located in `src/workers/`. They are available by name in the configuration without any additional imports.
+
+### `reqprops`
+Extracts a nested property from the `req` object and passes it as the next `data`.
+
+```javascript
+{ name: "reqprops", options: { properties: ["body"] } }
+// Extracts req.body
+
+{ name: "reqprops", options: { properties: ["cookie", "auth"] } }
+// Extracts req.cookie.auth
+```
+
+---
+
+### `req`
+Makes an HTTP POST request to an external service (e.g. a JWT service or auth backend). Merges `options.data` with the current `data` before sending.
+
+```javascript
 {
-  "configs": [
-    {
-      "routes": [
-        {
-          "path": "/example",
-          "workers": [
-            { "name": "Logger", "options": { "level": "info" } },
-            { "name": "Processor", "options": { "type": "json" } }
-          ]
-        }
-      ]
-    }
-  ]
+  name: "req",
+  options: {
+    url: "localhost",
+    port: 22001,
+    path: "/encode",
+    data: { secret: "jwt_secret", expire: "240h" }
+  }
 }
 ```
 
-### Route Processing (`/example`)
+Use `options.field` to extract a specific field from the response.
 
-1. The `Logger` module is called with `{ "level": "info" }` as `options`.
-2. Its result is passed to the `Processor` module with `{ "type": "json" }` as `options`.
+---
+
+### `extget`
+If the current `data` is a **string** (e.g. a raw token), sends it to an external service for verification. If `data` is already an object, passes it through unchanged.
+
+```javascript
+{
+  name: "extget",
+  options: { url: "localhost", port: 20110, path: "/auth" }
+}
+```
+
+---
+
+### `fieldsexists`
+Checks that all specified fields exist in `data`. If any field is missing, responds with `{}` (or the full `data` if `returnresult: true`) and stops the chain.
+
+```javascript
+{
+  name: "fieldsexists",
+  options: { fields: ["id"], returnresult: false }
+}
+```
+
+---
+
+### `inlist`
+Checks that `data[field]` is present in the allowed list. If not, responds with `{}` and stops the chain.
+
+```javascript
+{
+  name: "inlist",
+  options: { field: "id", list: ["user1", "admin"] }
+}
+```
+
+---
+
+### `setdata`
+Saves `data` into the in-memory session store (`Data`) using `data[field]` as the key. Returns `{ id }`.
+
+```javascript
+{ name: "setdata", options: { field: "id" } }
+```
+
+---
+
+### `getdata`
+Reads a previously saved session from the store by `data[field]` as the key. Returns the stored object.
+
+```javascript
+{ name: "getdata", options: { field: "id" } }
+```
+
+---
+
+### `setcookie`
+Sets a `Set-Cookie` response header using the current `data` as the value. Returns `{ result: true }`.
+
+```javascript
+{
+  name: "setcookie",
+  options: {
+    name: "auth",
+    mix: {
+      httpOnly: true,
+      path: "/",
+      duration: 864000  // seconds
+    }
+  }
+}
+```
+
+---
+
+### `sethead`
+Serializes `data` into a response header (stripping unsafe characters), writes it, and ends the response. Returns `null` — always terminates the chain.
+
+```javascript
+{ name: "sethead", options: { header: "X-User" } }
+```
+
+> This is the key worker for **nginx `auth_request`** integration: the reverse proxy reads the `X-User` header after a successful auth check.
+
+---
+
+### `getprop`
+Extracts `data[property]` and returns it as the next `data`.
+
+```javascript
+{ name: "getprop", options: { property: "token" } }
+```
+
+---
+
+## Custom Worker Modules
+
+You can inject your own workers by passing them as the second argument to `App.Start`:
+
+```javascript
+import { App } from "@reneos/auth"
+import MyModule from "./mymods/mymodule.js"
+import Config from "./config.js"
+
+App.Start(Config, {
+  "mymodule": MyModule
+})
+```
+
+A custom worker must export a default function with the following signature:
+
+```javascript
+export default async function (options, data, req, res) {
+  // options — configuration object from the route definition
+  // data    — output of the previous worker (or {} for the first)
+  // req     — Node.js IncomingMessage
+  // res     — Node.js ServerResponse
+
+  return { ...data, extra: true } // return value becomes next data
+}
+```
+
+**Rules:**
+- Return an object/string/value → passed to the next worker.
+- Return `null` or `undefined` → chain stops, `204 No Content` is sent (unless `res` was already used).
+- Throw an error with `error.code` → response with that HTTP status code and `error.message`.
+- All other thrown errors → `500 Internal Server Error` + `errorchain` event.
+
+---
+
+## Common Auth Flows
+
+### `/auth/login`
+
+```
+reqprops(body) → req(auth backend: verify credentials) → fieldsexists([id])
+  → setdata(id) → req(JWT service: encode) → setcookie(auth)
+```
+
+### `/auth` — session check (for nginx `auth_request`)
+
+```
+reqprops(cookie.auth) → req(JWT service: decode) → getdata(id)
+  → extget(auth backend: verify) → fieldsexists([id]) → sethead(X-User)
+```
+
+### `/auth/logout`
+
+```
+reqprops(cookie.auth) → req(JWT service: decode) → req(auth backend: logout)
+  → sethead(X-User)
+```
+
+---
+
+## API / Exported Classes
+
+### `App`
+```javascript
+App.Start(config, mods?)
+```
+Starts both the worker pipeline and the HTTP server.
+
+---
+
+### `Server`
+```javascript
+Server.Start(config)          // Start HTTP server
+Server.AddRoute(path, fn)     // Register a route handler
+Server.RemoveRoute(path)      // Unregister a route
+Server.Destroy()              // Gracefully stop the server
+Server.Port                   // Current port
+Server.on('error', fn)        // Listen for server errors
+```
+
+---
+
+### `Worker`
+```javascript
+Worker.Start(config, mods)        // Build and register all pipelines
+Worker.on('ready', fn)            // All routes registered
+Worker.on('errorchain', fn)       // Error in a worker chain
+Worker.on('endchain', fn)         // Chain ended without a value
+```
+
+---
+
+### `Data`
+In-memory session store with automatic TTL expiration.
+
+```javascript
+Data.SetData(key, values, expires?)  // Store data (default TTL: 86400000 ms = 24h)
+Data.GetData(key)                    // Retrieve data by key
+Data.RemoveData(key)                 // Remove entry and cancel timeout
+Data.ClearAll()                      // Wipe all stored data
+```
+
+---
+
+## Environment Variables (example config)
+
+| Variable | Default | Description |
+|---|---|---|
+| `JWT_SECRET` | `jwt_secret` | JWT signing secret |
+| `JWT_PORT` | `22001` | JWT service port |
+| `JWT_ENCODEPATH` | `/encode` | JWT encode endpoint |
+| `JWT_DECODEPATH` | `/decode` | JWT decode endpoint |
+| `JWT_EXPIRE` | `240h` | Token expiration |
+| `EXT_HOST` | `localhost` | External auth service host |
+| `EXT_PORT` | `20110` | External auth service port |
+| `EXT_LOGIN` | `/auth/login` | Login endpoint on auth backend |
+| `EXT_AUTH` | `/auth` | Verify endpoint on auth backend |
+| `EXT_LOGOUT` | `/auth/logout` | Logout endpoint on auth backend |
+| `TOKENCOOKIE` | `auth` | Cookie name for the auth token |
 
 ---
 
 ## Events
 
-### `errorchain`
-
-Emitted when an error occurs in a module or during route processing. Use this for debugging and monitoring.
-
-### `ready`
-
-Emitted after all routes are successfully registered.
-
-### `endchain`
-
-Emitted when an module return null 
+| Event | Emitter | Description |
+|---|---|---|
+| `ready` | `Worker` | All routes have been successfully registered |
+| `errorchain` | `Worker` | An error occurred inside a worker in a chain |
+| `endchain` | `Worker` | A worker returned `null`/`undefined`, chain stopped |
+| `error` | `Server` | An unhandled error occurred during request processing |
 
 ---
 
-## Example Configuration for Testing
+## License
 
-To test modules in isolation, use a simple configuration structure to simulate inputs and verify expected behavior.
-
+MIT © Viktor Abdulov

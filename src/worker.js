@@ -38,16 +38,29 @@ class Worker {
                     try {
                         value = await handlers[i](value, req, res)
                     } catch (error) {
-                        _emitter.emit('errorchain', error.message, path, i)
+                        if (error.code) {
+                            res.writeHead(error.code, { 'Content-Type': 'text/plain' }).end(error.message || '')
+                        } else if (!res.headersSent) {
+                            res.writeHead(500, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: 'Internal Server Error' }))
+                        }
+                        _emitter.emit('errorchain', error, path, i)
                         return
                     }
-                    if (!value) {
+                    //If no return value - break
+                    if (value === undefined || value === null) {
+                        _emitter.emit('endchain', `${Worker.Now} Step ${i} (${names[i]}) for ${req.url} returned no value`)
+                        if (!res.headersSent) {
+                            res.writeHead(204).end() // 204 No Content
+                        }
+                        return
+                    }
+                    /*if (!value) {
                         if (i < handlers.length - 1) {
                             _emitter.emit('endchain', `${Worker.Now} Step ${i} (${names[i]}) for ${req.url} return no value`)
                         }
                         res.end()
                         return
-                    }
+                    }*/
                 }
                 return value
             })

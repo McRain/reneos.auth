@@ -1,4 +1,4 @@
-import {routes as api, routes} from "./configs/api.config.js"
+import {routes as api} from "./configs/api.config.js"
 import {routes as main} from "./configs/default.config.js"
 
 export default {

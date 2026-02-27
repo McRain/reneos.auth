@@ -50,7 +50,7 @@ const Config = {
 
 class Server {
     static get Port() {
-        return _server.port
+        return _server.address()?.port
     }
 
     static get Server() {
@@ -95,6 +95,10 @@ class Server {
             req.query = Object.fromEntries(parsedUrl.searchParams.entries());
         } catch (error) {
             req.query = {}
+            if (!req.path) {
+                res.writeHead(400).end()
+                return
+            }
         }
         const chunks = []
         let dataLength = 0
@@ -115,10 +119,37 @@ class Server {
                 res.writeHead(400, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: 'Invalid data' }));
             }
         })
-            
+
     }
 
     static async OnRequestReady(req, res) {
+        try {
+            if (Cors(req, res)) return
+
+            BodyParse(req)
+            CookieParse(req)
+
+            const result = await _routes[req.path](req, res)
+
+            if (!result || res.headersSent) return
+
+            const contentType = typeof result === 'object' ?
+                'application/json' : 'text/plain'
+            const body = typeof result === 'object' ?
+                JSON.stringify(result) : result
+
+            res.writeHead(200, { 'Content-Type': contentType })
+            res.end(body)
+        } catch (error) {
+            if (!res.headersSent) {
+                res.writeHead(500, { 'Content-Type': 'application/json' })
+                res.end(JSON.stringify({ error: 'Internal Server Error' }))
+            }
+            _emitter.emit('error', error)
+        }
+    }
+
+    /* static async OnRequestReady(req, res) {
         try {
             if (Cors(req, res)) {
                 return
@@ -127,6 +158,7 @@ class Server {
             CookieParse(req)
             const result = await _routes[req.path](req, res)
             if (!result) {
+                //if no return - response end in worker
                 return
             }
             const isJson = typeof result === 'object';
@@ -137,13 +169,12 @@ class Server {
                 res.writeHead(200, { 'Content-Type': 'text/plain' });
                 res.end(result);
             }
-
         } catch (error) {
-            res.writeHead(500).end()
+            res.end()
             req.destroy()
             _emitter.emit('error', error)
         }
-    }
+    } */
     static Destroy() {
         return new Promise((resolve) => {
             _server.close(resolve);

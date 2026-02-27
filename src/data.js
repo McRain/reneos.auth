@@ -1,38 +1,40 @@
-const _data = {}
-
-class Data{
-	static RemoveData(key){
-		if(!_data[key])
-		{
-			return
+class Data {
+	static #data = new Map()
+	static #intervals = new Map()
+	static RemoveData(key) {
+		if (this.#intervals.has(key)) {
+			clearTimeout(this.#intervals.get(key))
+			this.#intervals.delete(key)
 		}
-		delete _data[key]
+		this.#data.delete(key)
 	}
-	static SetData(key,values,expires=86400000){
-		const dn = Date.now()
-		if(!_data[key])
-		{
-			_data[key] = {
-				data:{},
-				update:dn,
-				timeout:setTimeout(()=>{
-					Data.RemoveData(key)
-				},expires)
-			}
+
+	static SetData(key, values, expires = 86400000) {
+		const existing = this.#data.get(key) || {}
+
+		this.#data.set(key, { ...existing, ...values })
+
+		if (this.#intervals.has(key)) {
+			clearTimeout(this.#intervals.get(key))
 		}
-		const v  = _data[key]
-		v.data = {...v.data,...values}
-		v.update = dn
+
+		this.#intervals.set(key, setTimeout(() => {
+			this.RemoveData(key)
+		}, expires))
+
 		return values
 	}
 
-	/**
-	 * Return data by KEY or empty 
-	 * @param {*} key 
-	 * @returns 
-	 */
-	static GetData(key){
-		return _data[key].data || {}
+	static GetData(key) {
+		return this.#data.get(key) || {}
+	}
+
+	static ClearAll() {
+		for (const timeout of this.#intervals.values()) {
+			clearTimeout(timeout)
+		}
+		this.#data.clear()
+		this.#intervals.clear()
 	}
 }
 
